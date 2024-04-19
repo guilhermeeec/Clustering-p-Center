@@ -81,8 +81,39 @@ def add_restrictions(points, problem, xij, yj, D, p, dij):
         
     return problem
 
+def get_ij_from_xij(variable_name):
+    if((len(variable_name) != 5) or (variable_name[0] != 'X')):
+        return None, None
+    return int(variable_name[2]), int(variable_name[4])
+
 def interpret_variables(points, variables):
-    pass
+    xij_matrix = np.zeros((len(points),len(points)))
+    for variable in variables:
+        variable_name, variable_value = variable.getName(), variable.varValue
+        i,j = get_ij_from_xij(variable_name)
+        if(i is not None and j is not None):
+            xij_matrix[i][j] = float(variable_value) # G: possible problem here
+
+    yj_line = np.zeros(len(points))
+    for column_index in range(len(points)):
+        if(np.sum(xij_matrix[:,column_index]) > 0):
+            yj_line[column_index] = 1
+
+    return xij_matrix, yj_line
+
+def get_clusters_indexes_from_yj(yj_line):
+    clusters_indexes_list = [] # len = p 
+    for i in range(len(yj_line)):
+        if(yj_line[i] == 1):
+            clusters_indexes_list.append(i)
+    return clusters_indexes_list
+
+def set_points_cluster(points, xij_matrix):
+    for point_index in range(len(points)):
+        connected_cluster_index =get_clusters_indexes_from_yj(xij_matrix[point_index,:])
+        assert(len(connected_cluster_index) == 1)
+        points[point_index][2] = connected_cluster_index[0]
+    return points
 
 def solve_pcenter_pulp(points, p):
     distance_matrix = compute_distances(points)
@@ -97,4 +128,9 @@ def solve_pcenter_pulp(points, p):
     for v in problem.variables():
         print(v.name, "=", v.varValue)
     
-    interpret_variables(points, problem.variables())
+    xij_matrix, yj_line = interpret_variables(points, problem.variables())
+    clusters_indexes_list = get_clusters_indexes_from_yj(yj_line)
+    print("Clusters points: ", clusters_indexes_list)
+    points = set_points_cluster(points, xij_matrix)
+    return points, clusters_indexes_list
+
