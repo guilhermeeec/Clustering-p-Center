@@ -82,9 +82,10 @@ def add_restrictions(points, problem, xij, yj, D, p, dij):
     return problem
 
 def get_ij_from_xij(variable_name):
-    if((len(variable_name) != 5) or (variable_name[0] != 'X')):
+    splitted = variable_name.split('_')
+    if(splitted[0] != 'X'):
         return None, None
-    return int(variable_name[2]), int(variable_name[4])
+    return int(splitted[1]), int(splitted[2])
 
 def interpret_variables(points, variables):
     xij_matrix = np.zeros((len(points),len(points)))
@@ -111,7 +112,7 @@ def get_clusters_indexes_from_yj(yj_line):
 def set_points_cluster(points, xij_matrix):
     for point_index in range(len(points)):
         connected_cluster_index =get_clusters_indexes_from_yj(xij_matrix[point_index,:])
-        assert(len(connected_cluster_index) == 1)
+        assert(len(connected_cluster_index) == 1) # G: error
         points[point_index][2] = connected_cluster_index[0]
     return points
 

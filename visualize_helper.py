@@ -6,7 +6,7 @@ Input:
 points: numpy array with [point1, point2, ...], where each point is [x,y,cluster_id]
 cluster_colors_dict dictionary {cluster_id:color}
 '''
-def plot_points(points,cluster_colors_dict={},centers=None):
+def plot_points(points,cluster_colors_dict={},centers=None,verbose=True):
     plt.figure()
     plt.ion()
 
@@ -20,9 +20,10 @@ def plot_points(points,cluster_colors_dict={},centers=None):
         for i, center in enumerate(centers):
             plt.plot(center[0], center[1], color=cluster_colors_dict.get(i,"blue"),marker='*', label=f'Center {i}')
 
-    for i, (x, y, c) in enumerate(points):
-        plt.text(x, y, str(i), fontsize=12, ha='left', va='bottom')
-        plt.text(x, y, str(c), fontsize=12, ha='right', va='top')
+    if(verbose):
+        for i, (x, y, c) in enumerate(points):
+            plt.text(x, y, str(i), fontsize=8, ha='left', va='bottom')
+            plt.text(x, y, str(c), fontsize=8, ha='right', va='top')
         
 
     plt.xlabel('X')
