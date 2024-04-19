@@ -112,7 +112,7 @@ def get_clusters_indexes_from_yj(yj_line):
 def set_points_cluster(points, xij_matrix):
     for point_index in range(len(points)):
         connected_cluster_index =get_clusters_indexes_from_yj(xij_matrix[point_index,:])
-        assert(len(connected_cluster_index) == 1) # G: error
+        assert(len(connected_cluster_index) == 1)
         points[point_index][2] = connected_cluster_index[0]
     return points
 
