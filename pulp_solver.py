@@ -93,7 +93,7 @@ def interpret_variables(points, variables):
         variable_name, variable_value = variable.getName(), variable.varValue
         i,j = get_ij_from_xij(variable_name)
         if(i is not None and j is not None):
-            xij_matrix[i][j] = float(variable_value) # G: possible problem here
+            xij_matrix[i][j] = float(variable_value) 
 
     yj_line = np.zeros(len(points))
     for column_index in range(len(points)):
@@ -116,7 +116,17 @@ def set_points_cluster(points, xij_matrix):
         points[point_index][2] = connected_cluster_index[0]
     return points
 
-def solve_pcenter_pulp(points, p):
+def attribute_points_to_cluster(distance_matrix, clusters_indexes_list):
+    distances_points_to_clusters = distance_matrix[:,clusters_indexes_list]
+    num_points, num_clusters = distances_points_to_clusters.shape
+    xij = np.zeros((num_points,num_points))
+    for point_index in range(num_points):
+        closets_column_index = np.argmin(distances_points_to_clusters[point_index])
+        closest_cluster_index = clusters_indexes_list[closets_column_index]
+        xij[point_index][closest_cluster_index] = 1
+    return xij
+
+def solve_pcenter_pulp(points, p, post_optimization=True):
     distance_matrix = compute_distances(points)
     problem = LpProblem("p-center",LpMinimize)
     xij, yj, D = create_decison_variables(points)
@@ -132,6 +142,10 @@ def solve_pcenter_pulp(points, p):
     xij_matrix, yj_line = interpret_variables(points, problem.variables())
     clusters_indexes_list = get_clusters_indexes_from_yj(yj_line)
     print("Clusters points: ", clusters_indexes_list)
+
+    if(post_optimization):
+        xij_matrix = attribute_points_to_cluster(distance_matrix, clusters_indexes_list)
+
     points = set_points_cluster(points, xij_matrix)
     return points, clusters_indexes_list
 

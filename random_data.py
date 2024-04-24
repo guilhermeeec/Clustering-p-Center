@@ -25,6 +25,12 @@ plot_points(points,cluster_colors_dict=cluster_colors,centers=centers,verbose=Tr
 input("Press any key to continue...")
 
 
+points, clusters_indexes = solve_pcenter_pulp(points, 2, post_optimization=False)
+cluster_colors = {clusters_indexes[0]:'r',clusters_indexes[1]:'g'}
+plot_points(points,cluster_colors_dict=cluster_colors)
+input("Press any key to continue...")
+
+
 points, clusters_indexes = solve_pcenter_pulp(points, 2)
 cluster_colors = {clusters_indexes[0]:'r',clusters_indexes[1]:'g'}
 plot_points(points,cluster_colors_dict=cluster_colors)
