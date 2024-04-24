@@ -12,19 +12,20 @@ distances: numpy matrix with [[d11,d12,..], [d21,d22,...]], where dij is the
 distance beetween points i and j
 '''
 def compute_distances(points):
+    points = points[:,:-1] # remove label
     num_points = len(points)
-    distances = np.zeros((num_points, num_points))  # Initialize the distances matrix
+    distances = np.zeros((num_points, num_points)) 
 
     for i in range(num_points):
         for j in range(num_points):
             # Calculate Euclidean distance between points i and j
-            distances[i, j] = np.sqrt((points[i, 0] - points[j, 0]) ** 2 + (points[i, 1] - points[j, 1]) ** 2)
+            distances[i, j] = np.sqrt(np.sum((points[i] - points[j]) ** 2))
 
     return distances
 
 '''
 Input:
-points: pints: numpy array with [point1, point2, ...], where each 
+points: points: numpy array with [point1, point2, ...], where each 
 point is [x,y,cluster_id]
 PS: cluster_id not used
 
@@ -37,8 +38,8 @@ D: LP integer selection variables representing the maximum
 distance between a point and the cluster (point at the center
 of the cluster)
 '''
-def create_decison_variables(points):
-    index_list = range(len(points))
+def create_decison_variables(num_points):
+    index_list = range(num_points)
     xij = LpVariable.dicts("X",(index_list,index_list),0,None,LpBinary)
     yj = LpVariable.dicts("y",(index_list),0,None,LpBinary)
     D = LpVariable("D",0,None,LpContinuous)
@@ -64,8 +65,8 @@ distance beetween points i and j
 Output:
 problem: pulp problem, now updated with the restrictions
 '''
-def add_restrictions(points, problem, xij, yj, D, p, dij):
-    points_list = range(len(points))
+def add_restrictions(num_points, problem, xij, yj, D, p, dij):
+    points_list = range(num_points)
 
     for i in points_list:
         problem += lpSum([xij[i][j]*dij[i][j] for j in points_list]) <= D, "Maximum point {i} distance".format(i=i)
@@ -87,16 +88,16 @@ def get_ij_from_xij(variable_name):
         return None, None
     return int(splitted[1]), int(splitted[2])
 
-def interpret_variables(points, variables):
-    xij_matrix = np.zeros((len(points),len(points)))
+def interpret_variables(num_points, variables):
+    xij_matrix = np.zeros((num_points,num_points))
     for variable in variables:
         variable_name, variable_value = variable.getName(), variable.varValue
         i,j = get_ij_from_xij(variable_name)
         if(i is not None and j is not None):
             xij_matrix[i][j] = float(variable_value) 
 
-    yj_line = np.zeros(len(points))
-    for column_index in range(len(points)):
+    yj_line = np.zeros(num_points)
+    for column_index in range(num_points):
         if(np.sum(xij_matrix[:,column_index]) > 0):
             yj_line[column_index] = 1
 
@@ -113,7 +114,7 @@ def set_points_cluster(points, xij_matrix):
     for point_index in range(len(points)):
         connected_cluster_index =get_clusters_indexes_from_yj(xij_matrix[point_index,:])
         assert(len(connected_cluster_index) == 1)
-        points[point_index][2] = connected_cluster_index[0]
+        points[point_index][-1] = connected_cluster_index[0]
     return points
 
 def attribute_points_to_cluster(distance_matrix, clusters_indexes_list):
@@ -129,17 +130,17 @@ def attribute_points_to_cluster(distance_matrix, clusters_indexes_list):
 def solve_pcenter_pulp(points, p, post_optimization=True):
     distance_matrix = compute_distances(points)
     problem = LpProblem("p-center",LpMinimize)
-    xij, yj, D = create_decison_variables(points)
+    xij, yj, D = create_decison_variables(len(points))
     objective_function = D
     problem += objective_function
-    problem = add_restrictions(points,problem,xij,yj,D,p,distance_matrix)
+    problem = add_restrictions(len(points),problem,xij,yj,D,p,distance_matrix)
     
     problem.solve()
     print("Status: ", LpStatus[problem.status])
     for v in problem.variables():
         print(v.name, "=", v.varValue)
     
-    xij_matrix, yj_line = interpret_variables(points, problem.variables())
+    xij_matrix, yj_line = interpret_variables(len(points), problem.variables())
     clusters_indexes_list = get_clusters_indexes_from_yj(yj_line)
     print("Clusters points: ", clusters_indexes_list)
 
@@ -148,4 +149,3 @@ def solve_pcenter_pulp(points, p, post_optimization=True):
 
     points = set_points_cluster(points, xij_matrix)
     return points, clusters_indexes_list
-
