@@ -1,4 +1,5 @@
 from sklearn.datasets import make_blobs
+from sklearn.metrics import silhouette_score
 import numpy as np
 from visualize_helper import *
 from pulp_solver import *
@@ -21,23 +22,27 @@ centers = np.array([[-2,2],[2,2]])
 stdevs = np.array([2,2])
 points = generate_clusters(20,centers,stdevs)
 cluster_colors = {0:'r',1:'g'}
+print("Silhouette score: ", silhouette_score(points[:,:2], points[:,2]))
 plot_points(points,cluster_colors_dict=cluster_colors,centers=centers,verbose=True)
 input("Press any key to continue...")
 
 
 points, clusters_indexes = solve_pcenter_pulp(points, 2, post_optimization=False)
 cluster_colors = {clusters_indexes[0]:'r',clusters_indexes[1]:'g'}
+print("Silhouette score: ", silhouette_score(points[:,:2], points[:,2]))
 plot_points(points,cluster_colors_dict=cluster_colors)
 input("Press any key to continue...")
 
 
 points, clusters_indexes = solve_pcenter_pulp(points, 2)
 cluster_colors = {clusters_indexes[0]:'r',clusters_indexes[1]:'g'}
+print("Silhouette score: ", silhouette_score(points[:,:2], points[:,2]))
 plot_points(points,cluster_colors_dict=cluster_colors)
 input("Press any key to continue...")
 
 
 ponts, clusters_centers = solve_kmeans(points, 2)
 cluster_colors = {0:'r',1:'g'}
+print("Silhouette score: ", silhouette_score(points[:,:2], points[:,2]))
 plot_points(points,cluster_colors_dict=cluster_colors,centers=clusters_centers)
 input("Press any key to continue...")
