@@ -29,7 +29,7 @@ print("Silhouette score: ", silhouette_score(points[:,:-1], points[:,-1]))
 input("Press any key to continue...")
 
 
-points, clusters_indexes = solve_pcenter_pulp(points, 2, post_optimization=False)
+points, clusters_indexes = solve_pcenter_pulp(points, 2, post_optimization=False,debug=True)
 cluster_colors = {clusters_indexes[0]:'r',clusters_indexes[1]:'g'}
 print("Silhouette score: ", silhouette_score(points[:,:-1], points[:,-1]))
 input("Press any key to continue...")
